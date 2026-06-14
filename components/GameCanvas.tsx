@@ -64,7 +64,7 @@ export default function GameCanvas() {
           </div>
         </div>
 
-        <p className="hint">Keyboard: panah = jalan · spasi = aksi · injak tanaman matang = panen</p>
+        <p className="hint">Keyboard: panah = jalan · spasi = aksi sesuai lokasi</p>
         <footer>LADANG v0.1 — farming · fishing · cooking · town. Mining, hutan & ternak menyusul.</footer>
       </div>
 

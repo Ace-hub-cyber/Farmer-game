@@ -11,9 +11,9 @@
   "THHDHGGGPGGGWWWWGGGT",
   "TGGPGGGGPGGGWWWWWGGT",
   "TGGPGFFFFFFFFGWWGGGT",
-  "TGGPGSCSMSCSGGGGGGGT",
-  "TGGPGMSCSMSCGGGLGGGT",
-  "TGGPGSCSMSCSGGGGGGGT",
+  "TGGPGsssssssGGGLGGGT",
+  "TGGPGsssssssGGGGGGGT",
+  "TGGPGsssssssGGGGGGGT",
   "TGGPGFFFFFFFFGGGGGGT",
   "TGGPPPPPPPPPPPPPPPPP",
   "PPPGGGGLGGGGGGPGGGGT",
@@ -58,20 +58,21 @@
   jagung:{nama:"Bibit Jagung",harga:35,jual:30,t:12000,d:"Standar, untung lumayan"},
   semangka:{nama:"Bibit Semangka",harga:60,jual:55,t:16000,d:"Lama, tapi paling untung"}};
   const TOOLS=[
+  {id:"watercan",nama:"Alat Siram",harga:40,d:"Wajib untuk menyiram tanaman"},
   {id:"cangkul",nama:"Cangkul Baja",harga:100,d:"Hasil panen jadi dobel"},
   {id:"prorod",nama:"Pancingan Pro",harga:120,d:"Marker mancing lebih pelan"},
   {id:"sepatu",nama:"Sepatu Kilat",harga:150,d:"Jalan lebih cepat"}];
   const HARGA_IKAN=25,HARGA_MASAK=60;
-  const COST={tanam:5,siram:2,panen:2,pancing:3,masak:2};
+  const COST={tanam:5,siram:2,panen:2,pancing:3,masak:2,cangkul:3};
   const DAY_START=360,DAY_END=1440,MIN_MS=450;
 
   /* ============ STATE ============ */
   let scene="out",px=5,py=10,dir="down";
-  let gold=50,score=0,panenVal=0,nfish=0,ncook=0,stamina=100;
+  let gold=20,score=0,panenVal=0,nfish=0,ncook=0,stamina=100;
   let day=1,gameMin=DAY_START,weather="cerah";
-  const seedsInv={lobak:3,jagung:0,semangka:0};
+  const seedsInv={lobak:0,jagung:0,semangka:0};
   let activeSeed="lobak";
-  const owned={cangkul:false,prorod:false,sepatu:false};
+  const owned={watercan:false,cangkul:false,prorod:false,sepatu:false};
   const cropType={},watered={};
   let sleeping=false,fishing=false,castT=0,mpos=0,bx=-1,by=-1,shopKind=null,busy=false;
   let pose=null,poseT=0,poseDur=0,anims=[],grow={};
@@ -179,7 +180,7 @@
   say(where==="forced"?"Kemalaman... ketiduran di tempat.":"Tidur dulu...");
   setTimeout(()=>{
   sleeping=false;
-  scene="out";px=12;py=4;dir="down";updateRod();
+  scene="out";px=12;py=4;dir="down";updateAction();
   newDay(full);
   },1200);
   }
@@ -223,6 +224,8 @@
   if(t==="l"){rect("#444441",x+7,y+4,2,12);rect("#2c2c2a",x+5,y+14,6,2);rect("#f2c14e",x+5,y+1,6,5);rect("#ffe08a",x+6,y+2,4,3);return;}
   if(t==="k"){rect("#8a5a2b",x+2,y+5,12,11);rect("#a06a35",x+3,y+6,10,9);rect("#6e451f",x+2,y+9,12,1);rect("#6e451f",x+7,y+5,2,11);return;}
   if(t==="L"){rect("#e85d75",x+6,y+5,4,4);rect("#f2a0ae",x+7,y+6,2,2);rect("#3c8527",x+7,y+9,2,5);return;}
+  /* untilled farm plot */
+  if(t==="s"){rect("#a08055",x,y,TS,TS);rect("#907045",x,y+5,TS,2);rect("#907045",x,y+12,TS,2);return;}
   const wet=watered[r+","+c];
   rect(wet?"#5e3717":"#7a4a22",x,y,TS,TS);
   rect(wet?"#4d2c11":"#693d1b",x,y+4,TS,1);rect(wet?"#4d2c11":"#693d1b",x,y+9,TS,1);rect(wet?"#4d2c11":"#693d1b",x,y+14,TS,1);
@@ -373,13 +376,7 @@
   /* ============ ACTIONS ============ */
   function setPose(p,d){pose=p;poseT=performance.now();poseDur=d;}
   function addAnim(o){o.t0=performance.now();anims.push(o);}
-  function updateRod(){
-  rod.innerHTML=scene==="out"
-  ?'<span class="big">🎣</span>Mancing'
-  :scene==="in"
-  ?'<span class="big">🍳</span>Masak'
-  :'<span class="big">🏪</span>Toko';
-  }
+
   function neighbors(m,ch){
   const n=[[0,-1],[0,1],[-1,0],[1,0]];
   return n.some(([dx,dy])=>{const x=px+dx,y=py+dy;
@@ -392,34 +389,51 @@
   return null;
   }
   function stopFishing(text){
-  fishing=false;bx=-1;pose=null;updateRod();
+  fishing=false;bx=-1;pose=null;
   if(text)say(text);
+  updateAction();
   }
+
+  /* ============ DYNAMIC ACTION BUTTON ============ */
+  function updateAction(){
+  if(fishing){
+  rod.style.display="";
+  rod.innerHTML='<span class="big">❗</span>Tarik!';
+  return;
+  }
+  let label="",show=false;
+  if(scene==="out"){
+  const t=omap[py][px];
+  const k=py+","+px;
+  const w=waterNeighbor();
+  if(t==="s"){
+  show=true;label='<span class="big">⛏️</span>Cangkul';
+  }else if(t==="S"){
+  show=true;
+  const hasSeed=Object.values(seedsInv).some(v=>v>0);
+  label=hasSeed?'<span class="big">🌱</span>Tanam':'<span class="big">🌱</span>Tanam<br><small>Butuh bibit</small>';
+  }else if(t==="C"&&!watered[k]){
+  show=true;
+  label=owned.watercan?'<span class="big">💧</span>Siram':'<span class="big">💧</span>Siram<br><small>Butuh Alat Siram</small>';
+  }else if(t==="M"){
+  show=true;label='<span class="big">📦</span>Panen';
+  }else if(w){
+  show=true;label='<span class="big">🎣</span>Mancing';
+  }
+  }else if(scene==="in"){
+  if(neighbors(imap,"V")){show=true;label='<span class="big">🍳</span>Masak';}
+  }else if(scene==="town"){
+  if(neighbors(tmap,"1")||neighbors(tmap,"2")||neighbors(tmap,"3")){show=true;label='<span class="big">🏪</span>Toko';}
+  }
+  rod.style.display=show?"":"none";
+  if(show)rod.innerHTML=label;
+  }
+
   rod.addEventListener("click",()=>{
   if(sleeping||busy)return;
-  if(scene==="in"){
-  if(!neighbors(imap,"V")){say("Mendekatlah ke kompor dulu.");return;}
-  if(nfish<1){say("Tidak ada ikan untuk dimasak. Pancing dulu!");return;}
-  if(!spend(COST.masak))return;
-  nfish--;ncook++;hud();save();
-  say("Sreng sreng... ikan bakar siap!");
-  return;}
-  if(scene==="town"){
-  if(neighbors(tmap,"1")){openShop("bibit");return;}
-  if(neighbors(tmap,"2")){openShop("alat");return;}
-  if(neighbors(tmap,"3")){openShop("jual");return;}
-  say("Dekati Toko Bibit, Toko Alat, atau Lapak Jual.");
-  return;}
-  if(!fishing){
-  const w=waterNeighbor();
-  if(!w){say("Terlalu jauh dari air. Dekati kolam dulu.");return;}
-  if(!spend(COST.pancing))return;
-  [bx,by]=w;fishing=true;castT=performance.now();
-  setPose("cast",350);
-  setTimeout(()=>{if(fishing)addAnim({type:"splash",x:bx*TS,y:by*TS,dur:400});},350);
-  rod.innerHTML='<span class="big">❗</span>Tarik!';
-  say("Tarik saat marker kena zona hijau!");
-  }else{
+
+  /* reel in fish */
+  if(fishing){
   const d=Math.abs(mpos-50);
   const rare=weather==="hujan"?5:3;
   let t,kind=null;
@@ -428,12 +442,117 @@
   else if(d<=25){t="Dapat Lele. Lumayan!";kind="lele";}
   else t="Yah, ikannya lolos...";
   addAnim({type:"splash",x:bx*TS,y:by*TS,dur:400});
-  if(kind){nfish++;
-  addAnim({type:"fishjump",x:bx*TS+4,y:by*TS+4,tx:px*TS+4,ty:py*TS,kind,dur:500});}
+  if(kind){nfish++;addAnim({type:"fishjump",x:bx*TS+4,y:by*TS+4,tx:px*TS+4,ty:py*TS,kind,dur:500});}
   hud();save();
   stopFishing(t);
+  return;
+  }
+
+  if(scene==="out"){
+  const t=omap[py][px];
+  const cy=py,cx2=px;
+  const k=cy+","+cx2;
+
+  /* hoe untilled soil */
+  if(t==="s"){
+  if(!spend(COST.cangkul))return;
+  busy=true;
+  setPose("hoe",450);
+  addAnim({type:"dirt",x:cx2*TS,y:cy*TS,dur:450});
+  setTimeout(()=>{omap[cy][cx2]="S";busy=false;save();updateAction();say("Tanah dicangkul. Siap untuk ditanam!");},450);
+  return;
+  }
+
+  /* plant on tilled soil */
+  if(t==="S"){
+  let st=seedsInv[activeSeed]>0?activeSeed:Object.keys(seedsInv).find(k2=>seedsInv[k2]>0);
+  if(!st){say("Bibit habis. Beli di Toko Bibit di kota.");return;}
+  if(!spend(COST.tanam))return;
+  busy=true;
+  setPose("hoe",450);
+  addAnim({type:"dirt",x:cx2*TS,y:cy*TS,dur:450});
+  setTimeout(()=>{
+  addAnim({type:"seedfall",x:cx2*TS,y:cy*TS,dur:300});
+  setTimeout(()=>{
+  seedsInv[st]--;hud();omap[cy][cx2]="C";cropType[k]=st;
+  if(weather==="hujan"){
+  watered[k]=true;
+  clearTimeout(grow[k]);
+  grow[k]=setTimeout(()=>{if(omap[cy][cx2]==="C"){omap[cy][cx2]="M";delete watered[k];}},SEEDS[st].t);
+  say(SEEDS[st].nama+" ditanam — hujan langsung menyiramnya!");
+  }else{
+  watered[k]=false;
+  say(SEEDS[st].nama+" ditanam. Siram agar tumbuh!");
+  }
+  busy=false;save();updateAction();
+  },300);
+  },450);
+  return;
+  }
+
+  /* water planted crop */
+  if(t==="C"&&!watered[k]){
+  if(weather==="hujan"){say("Sedang hujan — tanaman tersiram otomatis.");return;}
+  if(!owned.watercan){say("Beli Alat Siram di Toko Alat dulu!");return;}
+  if(!spend(COST.siram))return;
+  busy=true;
+  setPose("water",600);
+  addAnim({type:"drops",x:cx2*TS,y:cy*TS,dur:600});
+  setTimeout(()=>{
+  watered[k]=true;busy=false;
+  const st=cropType[k]||"lobak";
+  clearTimeout(grow[k]);
+  grow[k]=setTimeout(()=>{if(omap[cy][cx2]==="C"){omap[cy][cx2]="M";delete watered[k];}},SEEDS[st].t);
+  say("Disiram! Tunggu sebentar atau tidur agar langsung matang.");
+  save();updateAction();
+  },600);
+  return;
+  }
+
+  /* harvest mature crop */
+  if(t==="M"){
+  if(!spend(COST.panen))return;
+  const ct=cropType[k]||"lobak";
+  const n=owned.cangkul?2:1;
+  omap[cy][cx2]="S";score+=n;panenVal+=SEEDS[ct].jual*n;
+  delete cropType[k];delete watered[k];
+  hud();save();updateAction();
+  addAnim({type:"spark",x:cx2*TS,y:cy*TS,dur:450});
+  say((owned.cangkul?"Panen dobel: ":"Panen: ")+SEEDS[ct].nama.replace("Bibit ","")+"!");
+  return;
+  }
+
+  /* start fishing */
+  const w=waterNeighbor();
+  if(w){
+  if(!spend(COST.pancing))return;
+  [bx,by]=w;fishing=true;castT=performance.now();
+  setPose("cast",350);
+  setTimeout(()=>{if(fishing)addAnim({type:"splash",x:bx*TS,y:by*TS,dur:400});},350);
+  updateAction();
+  say("Tarik saat marker kena zona hijau!");
+  return;
+  }
+  }
+
+  if(scene==="in"){
+  if(!neighbors(imap,"V")){say("Mendekatlah ke kompor dulu.");return;}
+  if(nfish<1){say("Tidak ada ikan untuk dimasak. Pancing dulu!");return;}
+  if(!spend(COST.masak))return;
+  nfish--;ncook++;hud();save();
+  say("Sreng sreng... ikan bakar siap!");
+  return;
+  }
+
+  if(scene==="town"){
+  if(neighbors(tmap,"1")){openShop("bibit");return;}
+  if(neighbors(tmap,"2")){openShop("alat");return;}
+  if(neighbors(tmap,"3")){openShop("jual");return;}
+  say("Dekati Toko Bibit, Toko Alat, atau Lapak Jual.");
+  return;
   }
   });
+
   el("eat").addEventListener("click",()=>{
   if(sleeping)return;
   if(ncook<1){say("Belum punya masakan. Masak ikan dulu di dapur rumah.");return;}
@@ -452,7 +571,8 @@
   return '<div class="srow"><div class="info"><div class="nm">'+nama+'</div><div class="ds">'+desc+'</div></div>'
   +'<button data-act="'+act+'" data-arg="'+arg+'"'+(dis?" disabled":"")+'>'+btn+'</button></div>';
   }
-  function openShop(kind){shopKind=kind;renderShop();}
+  function openShop(kind){shopKind=kind;renderShop();rod.style.display="none";}
+  function closeShop(){shopKind=null;panel.style.display="none";updateAction();}
   function renderShop(){
   if(!shopKind){panel.style.display="none";return;}
   let h='<div class="shop-head"><h3 id="shoptitle"></h3><button class="shop-close" data-act="close" aria-label="tutup">✕</button></div>';
@@ -477,7 +597,6 @@
   panel.querySelector("#shoptitle").textContent=title;
   panel.style.display="block";
   }
-  function closeShop(){shopKind=null;panel.style.display="none";}
   panel.addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;
   const act=b.dataset.act,arg=b.dataset.arg;
@@ -505,8 +624,9 @@
   function go(s,x,y,d,text){
   if(fishing)stopFishing();
   closeShop();
-  scene=s;px=x;py=y;dir=d;updateRod();
+  scene=s;px=x;py=y;dir=d;
   say(text);
+  updateAction();
   }
   const SOLID={out:"TWFHR",in:"XBKV",town:"TUuHA123lk"};
   function move(dx,dy,d){
@@ -527,57 +647,7 @@
   if(SOLID[scene].includes(t))return;
   px=nx;py=ny;
   if(scene==="in"&&(t==="Z"||t==="z")){doSleep(true,"bed");return;}
-  if(scene==="out"&&t==="M"){
-  if(!spend(COST.panen)){px-=dx;py-=dy;return;}
-  const k=ny+","+nx,ct=cropType[k]||"lobak";
-  const n=owned.cangkul?2:1;
-  m[ny][nx]="S";score+=n;panenVal+=SEEDS[ct].jual*n;delete cropType[k];delete watered[k];hud();save();
-  addAnim({type:"spark",x:nx*TS,y:ny*TS,dur:450});
-  say((owned.cangkul?"Panen dobel: ":"Panen: ")+SEEDS[ct].nama.replace("Bibit ","")+"!");
-  }
-  else if(scene==="out"&&t==="S"){
-  let st=seedsInv[activeSeed]>0?activeSeed:Object.keys(seedsInv).find(k=>seedsInv[k]>0);
-  if(st){
-  if(!spend(COST.tanam))return;
-  busy=true;
-  setPose("hoe",450);
-  addAnim({type:"dirt",x:nx*TS,y:ny*TS,dur:450});
-  setTimeout(()=>{
-  addAnim({type:"seedfall",x:nx*TS,y:ny*TS,dur:300});
-  setTimeout(()=>{
-  seedsInv[st]--;hud();m[ny][nx]="C";
-  const k=ny+","+nx;cropType[k]=st;
-  if(weather==="hujan"){
-  watered[k]=true;
-  clearTimeout(grow[k]);
-  grow[k]=setTimeout(()=>{if(omap[ny][nx]==="C"){omap[ny][nx]="M";delete watered[k];}},SEEDS[st].t);
-  say(SEEDS[st].nama+" ditanam — hujan langsung menyiramnya!");
-  }else{
-  watered[k]=false;
-  say(SEEDS[st].nama+" ditanam. Injak lagi untuk menyiram.");
-  }
-  busy=false;save();
-  },300);},450);
-  }else say("Bibit habis. Beli di Toko Bibit di kota.");
-  }
-  else if(scene==="out"&&t==="C"){
-  const k=ny+","+nx;
-  if(!watered[k]){
-  if(weather==="hujan"){say("Sedang hujan — tanaman tersiram otomatis.");return;}
-  if(!spend(COST.siram))return;
-  busy=true;
-  setPose("water",600);
-  addAnim({type:"drops",x:nx*TS,y:ny*TS,dur:600});
-  setTimeout(()=>{
-  watered[k]=true;busy=false;
-  say("Disiram! Tunggu sebentar atau tidur agar langsung matang.");
-  const st=cropType[k]||"lobak";
-  clearTimeout(grow[k]);
-  grow[k]=setTimeout(()=>{if(omap[ny][nx]==="C"){omap[ny][nx]="M";delete watered[k];}},SEEDS[st].t);
-  save();
-  },600);
-  }
-  }
+  updateAction();
   }
   const dirs={up:[0,-1,"up"],down:[0,1,"down"],left:[-1,0,"left"],right:[1,0,"right"]};
   Object.keys(dirs).forEach(id=>{
@@ -593,14 +663,15 @@
   document.addEventListener("keydown",e=>{
   const m={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",s:"down",a:"left",d:"right"};
   if(m[e.key]){e.preventDefault();move(...dirs[m[e.key]]);}
-  if(e.key===" "){e.preventDefault();rod.click();}
+  if(e.key===" "){e.preventDefault();if(rod.style.display!=="none")rod.click();}
   });
 
   /* ============ BOOT ============ */
   const loaded=load();
   if(!loaded)rollWeather();
-  updateRod();hud();
-  if(loaded)say("Save dimuat. Lanjutkan petualanganmu — Hari "+day+", cuaca "+(weather==="hujan"?"hujan":weather)+".");
+  hud();
+  if(loaded){say("Save dimuat. Lanjutkan petualanganmu — Hari "+day+", cuaca "+(weather==="hujan"?"hujan":weather)+".");}
+  updateAction();
   setInterval(()=>{save();},60000);
   requestAnimationFrame(tick);
 })();
