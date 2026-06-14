@@ -76,7 +76,7 @@
   const cropType={},watered={};
   let sleeping=false,fishing=false,castT=0,mpos=0,bx=-1,by=-1,shopKind=null,busy=false;
   let pose=null,poseT=0,poseDur=0,anims=[],grow={};
-  let resetArm=false,prevT=0,minAcc=0;
+  let resetArm=false,prevT=0,minAcc=0,lastActive=0;
   const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const cv=document.getElementById("map"),cx=cv.getContext("2d");
@@ -101,9 +101,11 @@
   const raw=localStorage.getItem("ladang_save");
   if(!raw)return false;
   const s=JSON.parse(raw);
-  gold=s.gold;score=s.score;panenVal=s.panenVal;nfish=s.nfish;ncook=s.ncook;
-  stamina=s.stamina;day=s.day;gameMin=s.gameMin;weather=s.weather;
-  Object.assign(seedsInv,s.seedsInv);activeSeed=s.activeSeed;Object.assign(owned,s.owned);
+  gold=s.gold??gold;score=s.score??0;panenVal=s.panenVal??0;nfish=s.nfish??0;ncook=s.ncook??0;
+  stamina=s.stamina??100;day=s.day??1;gameMin=s.gameMin??DAY_START;weather=s.weather??weather;
+  if(s.seedsInv)Object.assign(seedsInv,s.seedsInv);
+  if(s.activeSeed)activeSeed=s.activeSeed;
+  if(s.owned)Object.assign(owned,s.owned);
   for(const f of s.field){
   const k=f.r+","+f.c;
   omap[f.r][f.c]=f.t;
@@ -275,12 +277,15 @@
   }
   function player(now){
   const x=px*TS,y=py*TS;
+  const afk=!sleeping&&!busy&&!fishing&&(now-lastActive>8000);
   rect("#00000033",x+3,y+13,10,3);
   rect("#2b5fad",x+5,y+8,6,6);
   rect("#f3c89b",x+5,y+4,6,5);
   rect("#c9542f",x+3,y+2,10,3);rect("#c9542f",x+5,y+1,6,2);
-  if(dir!=="up"){rect("#2c1c10",x+6,y+6,1,1);rect("#2c1c10",x+9,y+6,1,1);}
+  if(!afk&&dir!=="up"){rect("#2c1c10",x+6,y+6,1,1);rect("#2c1c10",x+9,y+6,1,1);}
+  if(afk&&dir!=="up"){rect("#2c1c10",x+6,y+7,2,1);rect("#2c1c10",x+9,y+7,2,1);}
   rect("#5e3717",x+5,y+13,2,2);rect("#5e3717",x+9,y+13,2,2);
+  if(afk){cx.fillStyle="#ffe08a";cx.font="bold 7px monospace";cx.fillText("z",x+12,y+3);cx.fillText("Z",x+15,y-2);}
   if(pose&&now-poseT>poseDur)pose=null;
   const p=pose?(now-poseT)/poseDur:0;
   if(pose==="hoe"){
@@ -439,6 +444,7 @@
   }
 
   rod.addEventListener("click",()=>{
+  lastActive=performance.now();
   if(sleeping||busy)return;
 
   /* reel in fish */
@@ -662,7 +668,7 @@
   Object.keys(dirs).forEach(id=>{
   const b=el(id);let t;
   const g=()=>move(...dirs[id]);
-  const start=e=>{e.preventDefault();g();t=setInterval(g,owned.sepatu?110:160);};
+  const start=e=>{e.preventDefault();lastActive=performance.now();g();t=setInterval(g,owned.sepatu?110:160);};
   const stop=()=>clearInterval(t);
   b.addEventListener("touchstart",start,{passive:false});
   b.addEventListener("touchend",stop);b.addEventListener("touchcancel",stop);
@@ -670,9 +676,10 @@
   b.addEventListener("mouseup",stop);b.addEventListener("mouseleave",stop);
   });
   document.addEventListener("keydown",e=>{
+  lastActive=performance.now();
   const m={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",s:"down",a:"left",d:"right"};
   if(m[e.key]){e.preventDefault();move(...dirs[m[e.key]]);}
-  if(e.key===" "){e.preventDefault();if(rod.style.display!=="none")rod.click();}
+  if(e.key===" "||e.key==="Enter"){e.preventDefault();if(rod.style.display!=="none")rod.click();}
   });
 
   /* ============ BOOT ============ */
