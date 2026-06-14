@@ -32,6 +32,9 @@ export default function GameCanvas() {
         <div className="game-section">
           <div className="game-main">
             <canvas id="map" width={320} height={224}></canvas>
+          </div>
+
+          <div className="game-side">
             <p className="msgline" id="msg">Selamat datang! Tanam bibit, siram, dan ikuti papan penunjuk arah.</p>
 
             <div className="fishbar">
@@ -40,10 +43,6 @@ export default function GameCanvas() {
               <div id="marker" style={{ left: 0 }}></div>
             </div>
 
-            <div id="shop" className="shop"></div>
-          </div>
-
-          <div className="game-side">
             <div className="controls">
               <div className="dpad">
                 <span></span>
@@ -60,6 +59,8 @@ export default function GameCanvas() {
               <button id="eat">Makan (+40 stamina)</button>
               <button id="reset">Hapus save</button>
             </div>
+
+            <div id="shop" className="shop"></div>
           </div>
         </div>
 
