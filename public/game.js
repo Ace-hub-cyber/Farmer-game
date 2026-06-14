@@ -224,8 +224,17 @@
   if(t==="l"){rect("#444441",x+7,y+4,2,12);rect("#2c2c2a",x+5,y+14,6,2);rect("#f2c14e",x+5,y+1,6,5);rect("#ffe08a",x+6,y+2,4,3);return;}
   if(t==="k"){rect("#8a5a2b",x+2,y+5,12,11);rect("#a06a35",x+3,y+6,10,9);rect("#6e451f",x+2,y+9,12,1);rect("#6e451f",x+7,y+5,2,11);return;}
   if(t==="L"){rect("#e85d75",x+6,y+5,4,4);rect("#f2a0ae",x+7,y+6,2,2);rect("#3c8527",x+7,y+9,2,5);return;}
-  /* untilled farm plot */
-  if(t==="s"){rect("#a08055",x,y,TS,TS);rect("#907045",x,y+5,TS,2);rect("#907045",x,y+12,TS,2);return;}
+  /* untilled farm plot — tan with small weeds */
+  if(t==="s"){
+  rect("#b09870",x,y,TS,TS);
+  rect("#a08860",x,y+5,TS,2);rect("#a08860",x,y+11,TS,2);
+  rect("#6abe30",x+3,y+1,2,4);rect("#6abe30",x+10,y+6,2,4);rect("#6abe30",x+6,y+11,2,3);
+  return;}
+  /* tilled soil — dark brown with furrow marks */
+  if(t==="S"){
+  rect("#7a4a22",x,y,TS,TS);
+  rect("#5e3717",x,y+3,TS,2);rect("#5e3717",x,y+9,TS,2);rect("#5e3717",x,y+14,TS,2);
+  return;}
   const wet=watered[r+","+c];
   rect(wet?"#5e3717":"#7a4a22",x,y,TS,TS);
   rect(wet?"#4d2c11":"#693d1b",x,y+4,TS,1);rect(wet?"#4d2c11":"#693d1b",x,y+9,TS,1);rect(wet?"#4d2c11":"#693d1b",x,y+14,TS,1);
