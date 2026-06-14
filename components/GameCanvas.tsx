@@ -29,33 +29,39 @@ export default function GameCanvas() {
           <span className="chip">Masakan <b id="cook">0</b></span>
         </div>
 
-        <canvas id="map" width={320} height={224}></canvas>
-        <p className="msgline" id="msg">Selamat datang! Tanam bibit, siram, dan ikuti papan penunjuk arah.</p>
+        <div className="game-section">
+          <div className="game-main">
+            <canvas id="map" width={320} height={224}></canvas>
+            <p className="msgline" id="msg">Selamat datang! Tanam bibit, siram, dan ikuti papan penunjuk arah.</p>
 
-        <div className="fishbar">
-          <div className="fb-zone" style={{ left: '38%', width: '24%' }}></div>
-          <div className="fb-core" style={{ left: '47%', width: '6%' }}></div>
-          <div id="marker" style={{ left: 0 }}></div>
-        </div>
+            <div className="fishbar">
+              <div className="fb-zone" style={{ left: '38%', width: '24%' }}></div>
+              <div className="fb-core" style={{ left: '47%', width: '6%' }}></div>
+              <div id="marker" style={{ left: 0 }}></div>
+            </div>
 
-        <div className="controls">
-          <div className="dpad">
-            <span></span>
-            <button id="up" aria-label="atas">▲</button>
-            <span></span>
-            <button id="left" aria-label="kiri">◀</button>
-            <button id="down" aria-label="bawah">▼</button>
-            <button id="right" aria-label="kanan">▶</button>
+            <div id="shop" className="shop"></div>
           </div>
-          <button id="rod" className="act"></button>
-        </div>
 
-        <div className="minibtns">
-          <button id="eat">Makan (+40 stamina)</button>
-          <button id="reset">Hapus save</button>
-        </div>
+          <div className="game-side">
+            <div className="controls">
+              <div className="dpad">
+                <span></span>
+                <button id="up" aria-label="atas">▲</button>
+                <span></span>
+                <button id="left" aria-label="kiri">◀</button>
+                <button id="down" aria-label="bawah">▼</button>
+                <button id="right" aria-label="kanan">▶</button>
+              </div>
+              <button id="rod" className="act"></button>
+            </div>
 
-        <div id="shop" className="shop"></div>
+            <div className="minibtns">
+              <button id="eat">Makan (+40 stamina)</button>
+              <button id="reset">Hapus save</button>
+            </div>
+          </div>
+        </div>
 
         <p className="hint">Keyboard: panah = jalan · spasi = aksi · injak tanaman matang = panen</p>
         <footer>LADANG v0.1 — farming · fishing · cooking · town. Mining, hutan & ternak menyusul.</footer>
