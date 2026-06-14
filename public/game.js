@@ -601,5 +601,6 @@
   if(!loaded)rollWeather();
   updateRod();hud();
   if(loaded)say("Save dimuat. Lanjutkan petualanganmu — Hari "+day+", cuaca "+(weather==="hujan"?"hujan":weather)+".");
+  setInterval(()=>{save();},60000);
   requestAnimationFrame(tick);
 })();
