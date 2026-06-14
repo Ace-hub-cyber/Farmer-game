@@ -421,7 +421,8 @@
   const k=py+","+px;
   const w=waterNeighbor();
   if(t==="s"){
-  show=true;label='<span class="big">⛏️</span>Cangkul';
+  show=true;
+  label=owned.cangkul?'<span class="big">⛏️</span>Cangkul':'<span class="big">⛏️</span>Cangkul<br><small>Butuh Cangkul</small>';
   }else if(t==="S"){
   show=true;
   const hasSeed=Object.values(seedsInv).some(v=>v>0);
@@ -470,6 +471,7 @@
 
   /* hoe untilled soil */
   if(t==="s"){
+  if(!owned.cangkul){say("Beli Cangkul di Toko Alat dulu!");return;}
   if(!spend(COST.cangkul))return;
   busy=true;
   setPose("hoe",450);
@@ -679,7 +681,7 @@
   lastActive=performance.now();
   const m={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",s:"down",a:"left",d:"right"};
   if(m[e.key]){e.preventDefault();move(...dirs[m[e.key]]);}
-  if(e.key===" "||e.key==="Enter"){e.preventDefault();if(rod.style.display!=="none")rod.click();}
+  if((e.key===" "||e.key==="Enter")&&!e.repeat){e.preventDefault();if(rod.style.display!=="none")rod.click();}
   });
 
   /* ============ BOOT ============ */
