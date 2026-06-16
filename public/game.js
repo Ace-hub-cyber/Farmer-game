@@ -76,7 +76,7 @@
   const cropType={},watered={};
   let sleeping=false,fishing=false,castT=0,mpos=0,bx=-1,by=-1,shopKind=null,busy=false;
   let pose=null,poseT=0,poseDur=0,anims=[],grow={};
-  let resetArm=false,prevT=0,minAcc=0,lastActive=0;
+  let resetArm=false,prevT=0,minAcc=0,lastActive=0,lastActionT=0;
   const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const cv=document.getElementById("map"),cx=cv.getContext("2d");
@@ -445,8 +445,11 @@
   }
 
   rod.addEventListener("click",()=>{
-  lastActive=performance.now();
+  const now0=performance.now();
+  lastActive=now0;
   if(sleeping||busy)return;
+  if(now0-lastActionT<350)return;
+  lastActionT=now0;
 
   /* reel in fish */
   if(fishing){
@@ -473,10 +476,10 @@
   if(t==="s"){
   if(!owned.cangkul){say("Beli Cangkul di Toko Alat dulu!");return;}
   if(!spend(COST.cangkul))return;
-  busy=true;
+  busy=true;rod.disabled=true;
   setPose("hoe",450);
   addAnim({type:"dirt",x:cx2*TS,y:cy*TS,dur:450});
-  setTimeout(()=>{omap[cy][cx2]="S";busy=false;save();updateAction();say("Tanah dicangkul. Siap untuk ditanam!");},450);
+  setTimeout(()=>{omap[cy][cx2]="S";busy=false;rod.disabled=false;lastActionT=performance.now();save();updateAction();say("Tanah dicangkul. Siap untuk ditanam!");},450);
   return;
   }
 
